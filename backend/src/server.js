@@ -9,8 +9,18 @@ dotenv.config();
 const app = express();
 
 // Middleware
-const corsOrigin = process.env.CORS_ORIGIN || '*';
-app.use(cors({ origin: corsOrigin }));
+const rawOrigins = process.env.CORS_ORIGIN || '*';
+const allowedOrigins = rawOrigins.split(',').map((o) => o.trim());
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(bodyParser.json());
 
 // Health check
