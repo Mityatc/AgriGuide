@@ -13,14 +13,22 @@ const rawOrigins = process.env.CORS_ORIGIN || '*';
 const allowedOrigins = rawOrigins.split(',').map((o) => o.trim());
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow if origin is in allowed list or if wildcard is set
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
+    
+    console.log('CORS blocked origin:', origin, 'Allowed:', allowedOrigins);
     return callback(new Error('Not allowed by CORS'));
   },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
 app.use(bodyParser.json());
 
 // Health check
